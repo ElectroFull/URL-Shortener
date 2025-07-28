@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"github.com/electrofull/URL-Shortener/src/db"
 	"github.com/electrofull/URL-Shortener/src/routers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -35,7 +36,6 @@ func setupMiddleware(app *fiber.App) {
 		EnableStackTrace: true,
 	})) // Catches an error and shows where the error happened.
 
-	
 }
 
 func main() {
@@ -43,13 +43,14 @@ func main() {
 
 	portString := getPort()
 
+	conn := db.SetupConnection()
+	defer conn.Close()
+
 	app := fiber.New()
 
 	setupMiddleware(app)
 	
-	log.SetLevel(log.LevelDebug)
-
-	routers.RegisterHandlers(app)
+	routers.RegisterHandlers(app, conn)
 
 	log.Fatal(app.Listen(":" + portString))
 }
