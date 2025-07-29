@@ -10,11 +10,30 @@ import (
 
 func RegisterHandlers(app *fiber.App, conn *pgxpool.Pool) {
 	jwt_secret := os.Getenv("JWT_SECRET")
+
+	// Public routes
 	app.Get("/", handlers.Welcome)
 	app.Post("/register", handlers.Register(conn, jwt_secret))
-	app.Use(jwtware.New(jwtware.Config{
+	app.Post("/login", handlers.Login(conn, jwt_secret))
+
+	// Protected with JWT
+	app.Post("/shorten", jwtware.New(jwtware.Config{ // POST /shorten
 		SigningKey: jwtware.SigningKey{Key: []byte(jwt_secret)},
-	})) // JWT Authentication
-	app.Post("/shorten", handlers.Shorten(conn))
-	
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Unauthorized",
+			})
+		},
+	}), handlers.Shorten(conn))
+	app.Get("/all", jwtware.New(jwtware.Config{           // GET /all
+		SigningKey: jwtware.SigningKey{Key: []byte(jwt_secret)},
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Unauthorized",
+			})
+		},
+	}), handlers.All_Links(conn))
+
+	// public
+	app.Get("/:shortcode", handlers.Redirect(conn))
 }
