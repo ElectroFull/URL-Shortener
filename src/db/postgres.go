@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"log"
+	"github.com/gofiber/fiber/v2/log"	
 	"os"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
