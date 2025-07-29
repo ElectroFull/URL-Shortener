@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"github.com/electrofull/URL-Shortener/src/db"
 	"github.com/electrofull/URL-Shortener/src/routers"
 	"github.com/gofiber/fiber/v2"
@@ -9,10 +8,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
+	"os"
 )
 
-
-func loadEnvironment(){
+func loadEnvironment() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file!")
@@ -29,7 +28,7 @@ func getPort() string {
 
 func setupMiddleware(app *fiber.App) {
 	app.Use(logger.New(logger.Config{
-    	Format: "\033[32mINFO:\033[0m 	[${ip}]:${port}   ${status} - ${method} ${path}\n",
+		Format: "\033[32mINFO:\033[0m 	[${ip}]:${port}   ${status} - ${method} ${path}\n",
 	})) // Just logs the basic info (requests)
 
 	app.Use(recover.New(recover.Config{
@@ -49,7 +48,7 @@ func main() {
 	app := fiber.New()
 
 	setupMiddleware(app)
-	
+
 	routers.RegisterHandlers(app, conn)
 
 	log.Fatal(app.Listen(":" + portString))

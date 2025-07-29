@@ -1,10 +1,10 @@
 package routers
 
 import (
-    "github.com/gofiber/fiber/v2"
 	"github.com/electrofull/URL-Shortener/src/handlers"
-	"github.com/jackc/pgx/v5/pgxpool"
 	jwtware "github.com/gofiber/contrib/jwt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 )
 
@@ -25,7 +25,7 @@ func RegisterHandlers(app *fiber.App, conn *pgxpool.Pool) {
 			})
 		},
 	}), handlers.Shorten(conn))
-	app.Get("/all", jwtware.New(jwtware.Config{           // GET /all
+	app.Get("/all", jwtware.New(jwtware.Config{ // GET /all
 		SigningKey: jwtware.SigningKey{Key: []byte(jwt_secret)},
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{

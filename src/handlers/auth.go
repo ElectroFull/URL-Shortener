@@ -13,8 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
-func Register(db *pgxpool.Pool, jwt_secret string) fiber.Handler{
+func Register(db *pgxpool.Pool, jwt_secret string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		username, password := c.FormValue("username"), c.FormValue("password")
 		if username == "" || password == "" {
@@ -22,7 +21,7 @@ func Register(db *pgxpool.Pool, jwt_secret string) fiber.Handler{
 		}
 		hashed_pass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 
-		if err != nil{
+		if err != nil {
 			log.Debug("Bcrypt function crashed")
 			return c.Status(fiber.StatusInternalServerError).SendString("Try again later")
 		}
@@ -51,7 +50,7 @@ func Register(db *pgxpool.Pool, jwt_secret string) fiber.Handler{
 		// JWT logic
 		claims := jwt.MapClaims{
 			"username": username,
-			"exp":   time.Now().Add(time.Hour * 48).Unix(),  // 2 days
+			"exp":      time.Now().Add(time.Hour * 48).Unix(), // 2 days
 		}
 
 		header_payload := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -81,17 +80,17 @@ func Login(db *pgxpool.Pool, jwt_secret string) fiber.Handler {
 				return c.Status(fiber.StatusUnauthorized).SendString("Invalid credentials")
 			}
 			log.Debug("Db query failed")
-            return c.Status(fiber.StatusInternalServerError).SendString("Try again later")
+			return c.Status(fiber.StatusInternalServerError).SendString("Try again later")
 		}
-		
-		if bcrypt.CompareHashAndPassword([]byte(hash_pass), []byte(password)) != nil{
+
+		if bcrypt.CompareHashAndPassword([]byte(hash_pass), []byte(password)) != nil {
 			return c.Status(fiber.StatusUnauthorized).SendString("Invalid credentials")
 		}
 
 		// JWT logic
 		claims := jwt.MapClaims{
 			"username": username,
-			"exp":   time.Now().Add(time.Hour * 48).Unix(),  // 2 days
+			"exp":      time.Now().Add(time.Hour * 48).Unix(), // 2 days
 		}
 
 		header_payload := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

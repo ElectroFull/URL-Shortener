@@ -2,12 +2,12 @@ package db
 
 import (
 	"context"
-	"github.com/gofiber/fiber/v2/log"	
-	"os"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"os"
 )
 
-func SetupConnection() *pgxpool.Pool{
+func SetupConnection() *pgxpool.Pool {
 	URL := os.Getenv("DATABASE_URL")
 
 	conn, err := pgxpool.New(context.Background(), URL)

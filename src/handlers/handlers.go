@@ -2,14 +2,14 @@ package handlers
 
 import (
 	"context"
-	"net/url"
-	"os"
-	"strings"
 	"github.com/electrofull/URL-Shortener/src/helpers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"net/url"
+	"os"
+	"strings"
 )
 
 func Welcome(c *fiber.Ctx) error {
@@ -22,7 +22,7 @@ type URL struct {
 }
 
 func isValidURL(rawURL string) bool {
-    parsed, err := url.ParseRequestURI(rawURL)
+	parsed, err := url.ParseRequestURI(rawURL)
 
 	if err != nil {
 		return false
@@ -30,25 +30,25 @@ func isValidURL(rawURL string) bool {
 
 	domain_parts := strings.Split(parsed.Hostname(), ".") // ["www" ... "google", "com"]
 
-	if len(domain_parts) < 2 || len(domain_parts[len(domain_parts) - 1]) < 2 {
+	if len(domain_parts) < 2 || len(domain_parts[len(domain_parts)-1]) < 2 {
 		return false
 	}
 
-    return parsed.Scheme != "" && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
+	return parsed.Scheme != "" && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
 }
 
 func Shorten(db *pgxpool.Pool) fiber.Handler {
-	return func (c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
 		if !strings.HasPrefix(c.Get("Content-Type"), "application/json") {
-            return c.Status(fiber.StatusBadRequest).SendString("Content-Type must be application/json")
-        }
+			return c.Status(fiber.StatusBadRequest).SendString("Content-Type must be application/json")
+		}
 
 		Url := new(URL)
 		if err := c.BodyParser(Url); err != nil {
 			return err
 		}
 
-		if !isValidURL(Url.Url){
+		if !isValidURL(Url.Url) {
 			return c.Status(fiber.StatusBadRequest).SendString("Wrong URL format")
 		}
 
@@ -63,7 +63,7 @@ func Shorten(db *pgxpool.Pool) fiber.Handler {
 
 		if err != nil {
 			log.Debug("Db query failed")
-            return c.Status(fiber.StatusInternalServerError).SendString("Try again later")
+			return c.Status(fiber.StatusInternalServerError).SendString("Try again later")
 		}
 
 		tx, err := db.Begin(context.Background()) // Transaction opens
@@ -72,23 +72,23 @@ func Shorten(db *pgxpool.Pool) fiber.Handler {
 		}
 		defer tx.Rollback(context.Background())
 
-	    err = tx.QueryRow(context.Background(), "INSERT INTO urls (original_url, user_id) VALUES ($1, $2) RETURNING id", Url.Url, user_id).Scan(&url_id)
+		err = tx.QueryRow(context.Background(), "INSERT INTO urls (original_url, user_id) VALUES ($1, $2) RETURNING id", Url.Url, user_id).Scan(&url_id)
 		if err != nil {
 			log.Debug("Could not insert into urls")
 			return c.Status(fiber.StatusInternalServerError).SendString("Try again later")
 		}
-	
+
 		encoding := helpers.Base62Encode(url_id)
 
 		base_url := os.Getenv("BASE_URL")
 
 		if base_url == "" {
-            log.Debug("BASE_URL environment variable not set")
-            return c.Status(fiber.StatusInternalServerError).SendString("Server configuration error")
-        }
+			log.Debug("BASE_URL environment variable not set")
+			return c.Status(fiber.StatusInternalServerError).SendString("Server configuration error")
+		}
 
 		short_url := base_url + "/" + encoding
-		
+
 		_, err = tx.Exec(context.Background(), "UPDATE urls SET short_url = $1 WHERE id = $2", short_url, url_id)
 
 		if err != nil {
