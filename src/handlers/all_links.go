@@ -15,9 +15,6 @@ func All_Links(db *pgxpool.Pool) fiber.Handler {
 		user := c.Locals("user").(*jwt.Token) // getting the token
 		claims := user.Claims.(jwt.MapClaims) // turning it into the map
 		username := claims["username"].(string)
-
-
-		
 		var user_id int
 		err := db.QueryRow(context.Background(), "SELECT id FROM users WHERE username=$1", username).Scan(&user_id)
 
