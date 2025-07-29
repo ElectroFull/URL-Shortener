@@ -24,13 +24,17 @@ type URL struct {
 func isValidURL(rawURL string) bool {
     parsed, err := url.ParseRequestURI(rawURL)
 
+	if err != nil {
+		return false
+	}
+
 	domain_parts := strings.Split(parsed.Hostname(), ".") // ["www" ... "google", "com"]
 
 	if len(domain_parts) < 2 || len(domain_parts[len(domain_parts) - 1]) < 2 {
 		return false
 	}
 
-    return err == nil && parsed.Scheme != "" && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
+    return parsed.Scheme != "" && (parsed.Scheme == "http" || parsed.Scheme == "https") && parsed.Host != ""
 }
 
 func Shorten(db *pgxpool.Pool) fiber.Handler {
@@ -76,7 +80,14 @@ func Shorten(db *pgxpool.Pool) fiber.Handler {
 	
 		encoding := helpers.Base62Encode(url_id)
 
-		short_url := os.Getenv("BASE_URL") + "/" + encoding
+		base_url := os.Getenv("BASE_URL")
+
+		if base_url == "" {
+            log.Debug("BASE_URL environment variable not set")
+            return c.Status(fiber.StatusInternalServerError).SendString("Server configuration error")
+        }
+
+		short_url := base_url + "/" + encoding
 		
 		_, err = tx.Exec(context.Background(), "UPDATE urls SET short_url = $1 WHERE id = $2", short_url, url_id)
 
