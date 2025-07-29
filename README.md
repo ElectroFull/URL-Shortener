@@ -101,6 +101,10 @@ curl -X GET http://localhost:8000/all \
 curl -L http://localhost:8000/abc123
 ```
 
+<img width="1612" height="725" alt="image" src="https://github.com/user-attachments/assets/2804e296-bfb0-446a-a386-370e882bd506" />
+
+
+
 ## 🔐 Security Features
 
 - **Password Hashing**: Uses bcrypt with default cost
